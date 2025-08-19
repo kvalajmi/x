@@ -1,0 +1,144 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* WhatsApp-inspired Design System */
+
+@layer base {
+  :root {
+    --background: 243 100% 98%;
+    --foreground: 155 25% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 155 25% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 155 25% 15%;
+
+    --primary: 142 70% 49%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 142 76% 36%;
+
+    --secondary: 142 25% 94%;
+    --secondary-foreground: 155 25% 15%;
+
+    --muted: 142 15% 96%;
+    --muted-foreground: 155 15% 45%;
+
+    --accent: 142 45% 92%;
+    --accent-foreground: 155 25% 15%;
+
+    --success: 142 70% 49%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 142 20% 88%;
+    --input: 142 20% 95%;
+    --ring: 142 70% 49%;
+
+    --radius: 0.75rem;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-success: linear-gradient(135deg, hsl(var(--success)), hsl(142 76% 36%));
+    --gradient-bg: linear-gradient(135deg, hsl(var(--background)), hsl(142 30% 97%));
+
+    /* Shadows */
+    --shadow-whatsapp: 0 4px 14px 0 hsl(var(--primary) / 0.15);
+    --shadow-card: 0 2px 10px hsl(142 20% 88% / 0.3);
+    --shadow-button: 0 2px 8px hsl(var(--primary) / 0.2);
+
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-arabic;
+    font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    direction: rtl;
+  }
+
+  .font-arabic {
+    font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+}
+
+@layer components {
+  .btn-whatsapp {
+    @apply bg-primary hover:bg-primary-glow text-primary-foreground font-semibold px-6 py-3 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105;
+    background: var(--gradient-primary);
+    box-shadow: var(--shadow-button);
+  }
+
+  .card-whatsapp {
+    @apply bg-card border border-border rounded-xl p-6;
+    box-shadow: var(--shadow-card);
+    transition: var(--transition-smooth);
+  }
+
+  .card-whatsapp:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-whatsapp);
+  }
+
+  .input-whatsapp {
+    @apply bg-input border-border focus:border-primary focus:ring-2 focus:ring-primary/20 rounded-lg px-4 py-3 transition-all duration-200;
+  }
+
+  .gradient-bg {
+    background: var(--gradient-bg);
+  }
+}

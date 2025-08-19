@@ -1,0 +1,51 @@
+{
+  "name": "whatsapp-bulk-backend",
+  "version": "1.0.0",
+  "description": "WhatsApp Bulk Messaging Backend System",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "system": "node start-system.js",
+    "system:dev": "node start-system.js",
+    "diagnostic": "node diagnostic.js",
+    "health": "node diagnostic.js",
+    "build": "cd frontend && npm install && npm run build",
+    "install:all": "npm install && cd frontend && npm install",
+    "clean": "rm -rf sessions logs uploads temp .wwebjs_auth backend/.wwebjs_auth",
+    "clean:sessions": "node cleanup-sessions.js",
+    "deploy": "npm run clean && npm run build"
+  },
+  "keywords": [
+    "whatsapp",
+    "bulk-messaging",
+    "nodejs",
+    "express",
+    "socket.io"
+  ],
+  "author": "WhatsApp Bulk System",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.2.0",
+    "fs-extra": "^11.2.0",
+    "helmet": "^7.1.0",
+    "libphonenumber-js": "^1.10.58",
+    "multer": "^2.0.0-rc.4",
+    "p-queue": "^7.4.1",
+    "qrcode": "^1.5.3",
+    "socket.io": "^4.7.5",
+    "socket.io-client": "^4.8.1",
+    "whatsapp-web.js": "^1.24.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
