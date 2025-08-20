@@ -4,6 +4,7 @@ import { Server } from 'socket.io';
 import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import cors from 'cors';
 
 // Import services and middleware
 import { setupSecurity, corsOptions } from './src/middleware/security.js';
@@ -84,19 +85,6 @@ class WhatsAppBulkServer {
     this.app.use(express.static(frontendPath));
     console.log('📂 Serving frontend from:', frontendPath);
   }
-      
-      // Body parsing middleware
-      this.app.use(express.json({ limit: '10mb' }));
-      this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-  
-      // Apply CORS middleware to the Express app
-      this.app.use(cors(corsOptions));
-      
-      // Serve static files from frontend dist
-      const frontendPath = path.join(__dirname, './frontend/dist');
-      this.app.use(express.static(frontendPath));
-      console.log('📂 Serving frontend from:', frontendPath);
-    }
 
   async initializeServices() {
     console.log('🔧 Initializing services...');
