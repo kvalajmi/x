@@ -68,19 +68,25 @@ class WhatsAppBulkServer {
   setupMiddleware() {
     console.log('⚙️ Setting up middleware...');
     
-    // Security middleware
-    setupSecurity(this.app);
-    console.log('🔒 Security middleware configured');
-    
-    // Body parsing middleware
-    this.app.use(express.json({ limit: '10mb' }));
-    this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-    // Serve static files from frontend dist
-    const frontendPath = path.join(__dirname, './frontend/dist');
-    this.app.use(express.static(frontendPath));
-    console.log('📂 Serving frontend from:', frontendPath);
-  }
+    setupMiddleware() {
+      console.log('⚙️ Setting up middleware...');
+      
+      // Security middleware
+      setupSecurity(this.app);
+      console.log('🔒 Security middleware configured');
+      
+      // Body parsing middleware
+      this.app.use(express.json({ limit: '10mb' }));
+      this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+  
+      // Apply CORS middleware to the Express app
+      this.app.use(cors(corsOptions));
+      
+      // Serve static files from frontend dist
+      const frontendPath = path.join(__dirname, './frontend/dist');
+      this.app.use(express.static(frontendPath));
+      console.log('📂 Serving frontend from:', frontendPath);
+    }
 
   async initializeServices() {
     console.log('🔧 Initializing services...');
