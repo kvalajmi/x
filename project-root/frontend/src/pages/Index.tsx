@@ -6,6 +6,9 @@ import FileUpload from '@/components/FileUpload';
 import ControlPanel from '@/components/ControlPanel';
 import Statistics from '@/components/Statistics';
 import MessageLog from '@/components/MessageLog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import ConnectionStatusBar from '@/components/ConnectionStatusBar';
 
 // WhatsApp States (matching backend)
 const WHATSAPP_STATES = {
@@ -67,6 +70,7 @@ const Index = () => {
     failed: 0,
     remaining: 0
   });
+  const [messageTemplate, setMessageTemplate] = useState<string>('');
 
   // UI state
   const [lastError, setLastError] = useState<string | null>(null);
@@ -303,16 +307,21 @@ const Index = () => {
    * Start messaging
    */
   const handleStartMessaging = useCallback(() => {
-    if (!socket || contacts.length === 0) return;
-
-    const message = "مرحبا، هذه رسالة تجريبية من نظام الرسائل الجماعية.";
+    if (!socket || contacts.length === 0 || !messageTemplate) {
+        if (!messageTemplate) {
+            setLastError("لا يمكن أن يكون نص الرسالة فارغاً.");
+        }
+        return;
+    }
     
     console.log('📤 Starting messaging...', { contactCount: contacts.length });
-    setStats({ total: contacts.length, sent: 0, failed: 0, remaining: contacts.length });
+    // The message is now taken from the state
+    const totalMessages = contacts.reduce((total, contact) => total + (contact.validPhones?.length || 0), 0);
+    setStats({ total: totalMessages, sent: 0, failed: 0, remaining: totalMessages });
     setMessageLog([]);
     
-    socket.emit('start_messaging', { messageRows: contacts, message });
-  }, [socket, contacts]);
+    socket.emit('start_messaging', { messageRows: contacts, message: messageTemplate });
+  }, [socket, contacts, messageTemplate]);
 
   /**
    * Handle file upload
@@ -393,7 +402,6 @@ const Index = () => {
   };
 
   const connectionStatus = getConnectionStatus();
-  const StatusIcon = connectionStatus.icon;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50" dir="rtl">
@@ -407,57 +415,17 @@ const Index = () => {
         </div>
 
         {/* Connection Status Bar */}
-        <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3 space-x-reverse">
-              <StatusIcon className={`w-5 h-5 ${connectionStatus.color} ${isConnecting ? 'animate-spin' : ''}`} />
-              <span className={`font-medium ${connectionStatus.color}`}>
-                {connectionStatus.text}
-              </span>
-              {loadingProgress && (
-                <span className="text-sm text-gray-500">
-                  ({loadingProgress.percent}% - {loadingProgress.message})
-                </span>
-              )}
-            </div>
-            
-            <div className="flex items-center space-x-2 space-x-reverse">
-              {whatsappState === WHATSAPP_STATES.DISCONNECTED && (
-                <button
-                  onClick={handleConnectWhatsApp}
-                  disabled={!socketConnected || isConnecting}
-                  className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg flex items-center space-x-2 space-x-reverse"
-                >
-                  <MessageSquare className="w-4 h-4" />
-                  <span>ربط واتساب</span>
-                </button>
-              )}
-              
-              {whatsappState === WHATSAPP_STATES.READY && (
-                <div className="flex space-x-2 space-x-reverse">
-                  <button
-                    onClick={handleLogoutWhatsApp}
-                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-2 rounded-lg text-sm"
-                  >
-                    تسجيل خروج
-                  </button>
-                  <button
-                    onClick={handleDisconnectWhatsApp}
-                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm"
-                  >
-                    قطع الاتصال
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {lastError && (
-            <div className="mt-3 p-3 bg-red-100 border border-red-300 rounded-lg">
-              <p className="text-red-700 text-sm">{lastError}</p>
-            </div>
-          )}
-        </div>
+        <ConnectionStatusBar
+          isConnecting={isConnecting}
+          connectionStatus={connectionStatus}
+          loadingProgress={loadingProgress}
+          whatsappState={whatsappState}
+          socketConnected={socketConnected}
+          handleConnectWhatsApp={handleConnectWhatsApp}
+          handleLogoutWhatsApp={handleLogoutWhatsApp}
+          handleDisconnectWhatsApp={handleDisconnectWhatsApp}
+          lastError={lastError}
+        />
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -477,10 +445,30 @@ const Index = () => {
               onFileUpload={handleFileUpload}
             />
 
+            {/* Message Input */}
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <h3 className="text-lg font-semibold mb-4">نص الرسالة</h3>
+              <div className="grid w-full gap-1.5">
+                <Label htmlFor="message">اكتب رسالتك هنا. سيتم إرسال هذه الرسالة إلى جميع الأرقام الموجودة في الملف.</Label>
+                <Textarea
+                  id="message"
+                  placeholder="مثال: مرحبا، {name}. فاتورتك المستحقة هي {amount}."
+                  value={messageTemplate}
+                  onChange={(e) => setMessageTemplate(e.target.value)}
+                  className="min-h-[120px]"
+                  disabled={sendingStatus !== 'idle'}
+                />
+                <p className="text-sm text-gray-500">
+                  ملاحظة: حاليًا، لا يتم دعم استبدال المتغيرات مثل `{name}`.
+                </p>
+              </div>
+            </div>
+
             {/* Control Panel */}
             <ControlPanel
               whatsappReady={whatsappState === WHATSAPP_STATES.READY}
               hasContacts={contacts.length > 0}
+              hasMessage={!!messageTemplate}
               sendingStatus={sendingStatus}
               onStart={handleStartMessaging}
               onPause={handlePauseMessaging}
