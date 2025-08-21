@@ -1,4 +1,5 @@
 import { handleSocketError } from '../middleware/errorHandler.js';
+import { logger } from '../utils/logger.js';
 
 class SocketService {
   constructor(io, whatsappService, messageService) {
@@ -12,7 +13,7 @@ class SocketService {
 
   setupSocketHandlers() {
     this.io.on('connection', (socket) => {
-      console.log(`🔌 Client connected: ${socket.id}`);
+      logger.info(`🔌 Client connected: ${socket.id}`);
       this.connectedClients.set(socket.id, {
         socket,
         connectedAt: new Date(),
@@ -25,24 +26,24 @@ class SocketService {
       // Handle WhatsApp connection request
       socket.on('connect_whatsapp', async () => {
         try {
-          console.log(`📱 WhatsApp connection requested by ${socket.id}`);
+          logger.info(`📱 WhatsApp connection requested by ${socket.id}`);
           await this.whatsappService.initialize();
         } catch (error) {
-          console.error('❌ Error connecting to WhatsApp:', error);
+          logger.error('❌ Error connecting to WhatsApp:', { error, socketId: socket.id });
           handleSocketError(socket, error);
         }
       });
 
       socket.on('disconnect_whatsapp', async () => {
         try {
-          console.log(`📱 WhatsApp disconnect requested by ${socket.id}`);
+          logger.info(`📱 WhatsApp disconnect requested by ${socket.id}`);
           await this.whatsappService.logout();
           socket.emit('whatsapp_disconnected', {
             success: true,
             message: 'تم تسجيل الخروج من واتساب بنجاح'
           });
         } catch (error) {
-          console.error('❌ Error disconnecting from WhatsApp:', error);
+          logger.error('❌ Error disconnecting from WhatsApp:', { error, socketId: socket.id });
           socket.emit('disconnect_error', { error: error.message });
         }
       });
@@ -50,7 +51,7 @@ class SocketService {
       // Handle messaging controls
       socket.on('start_messaging', async (data) => {
         try {
-          console.log(`🚀 Start messaging requested by ${socket.id}`);
+          logger.info(`🚀 Start messaging requested by ${socket.id}`);
           
           if (!data.messageRows) {
             throw new Error('Message rows are required');
@@ -64,7 +65,7 @@ class SocketService {
           });
           
         } catch (error) {
-          console.error('❌ Error starting messaging:', error);
+          logger.error('❌ Error starting messaging:', { error, socketId: socket.id });
           socket.emit('messaging_error', {
             success: false,
             error: error.message
@@ -74,7 +75,7 @@ class SocketService {
 
       socket.on('pause_messaging', () => {
         try {
-          console.log(`⏸️ Pause messaging requested by ${socket.id}`);
+          logger.info(`⏸️ Pause messaging requested by ${socket.id}`);
           this.messageService.pauseMessaging();
           
           socket.emit('messaging_paused', {
@@ -83,7 +84,7 @@ class SocketService {
           });
           
         } catch (error) {
-          console.error('❌ Error pausing messaging:', error);
+          logger.error('❌ Error pausing messaging:', { error, socketId: socket.id });
           socket.emit('messaging_error', {
             success: false,
             error: error.message
@@ -93,7 +94,7 @@ class SocketService {
 
       socket.on('resume_messaging', () => {
         try {
-          console.log(`▶️ Resume messaging requested by ${socket.id}`);
+          logger.info(`▶️ Resume messaging requested by ${socket.id}`);
           this.messageService.resumeMessaging();
           
           socket.emit('messaging_resumed', {
@@ -102,7 +103,7 @@ class SocketService {
           });
           
         } catch (error) {
-          console.error('❌ Error resuming messaging:', error);
+          logger.error('❌ Error resuming messaging:', { error, socketId: socket.id });
           socket.emit('messaging_error', {
             success: false,
             error: error.message
@@ -112,7 +113,7 @@ class SocketService {
 
       socket.on('cancel_messaging', () => {
         try {
-          console.log(`🛑 Cancel messaging requested by ${socket.id}`);
+          logger.info(`🛑 Cancel messaging requested by ${socket.id}`);
           this.messageService.cancelMessaging();
           
           socket.emit('messaging_cancelled', {
@@ -121,7 +122,7 @@ class SocketService {
           });
           
         } catch (error) {
-          console.error('❌ Error cancelling messaging:', error);
+          logger.error('❌ Error cancelling messaging:', { error, socketId: socket.id });
           socket.emit('messaging_error', {
             success: false,
             error: error.message
@@ -156,7 +157,7 @@ class SocketService {
             message: 'Logs cleared successfully'
           });
         } catch (error) {
-          console.error('❌ Error clearing logs:', error);
+          logger.error('❌ Error clearing logs:', { error, socketId: socket.id });
           socket.emit('error', {
             success: false,
             error: error.message
@@ -166,7 +167,7 @@ class SocketService {
 
       // Handle disconnect
       socket.on('disconnect', (reason) => {
-        console.log(`🔌 Client disconnected: ${socket.id} (${reason})`);
+        logger.info(`🔌 Client disconnected: ${socket.id} (${reason})`);
         this.connectedClients.delete(socket.id);
         
         // Continue messaging even if no clients are connected
@@ -181,7 +182,7 @@ class SocketService {
       });
     });
 
-    console.log('🔌 Socket.IO handlers configured');
+    logger.info('🔌 Socket.IO handlers configured');
   }
 
   sendCurrentStatus(socket) {
@@ -211,7 +212,7 @@ class SocketService {
         socket.emit('qr', qrCode);
       }
     } catch (error) {
-      console.error('❌ Error sending current status:', error);
+      logger.error('❌ Error sending current status:', { error, socketId: socket.id });
       handleSocketError(socket, error);
     }
   }
@@ -241,7 +242,7 @@ class SocketService {
 
     for (const [socketId, client] of this.connectedClients) {
       if (now - client.lastActivity > timeout) {
-        console.log(`🧹 Cleaning up inactive client: ${socketId}`);
+        logger.info(`🧹 Cleaning up inactive client: ${socketId}`);
         client.socket.disconnect(true);
         this.connectedClients.delete(socketId);
       }

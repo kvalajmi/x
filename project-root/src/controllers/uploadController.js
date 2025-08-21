@@ -1,5 +1,6 @@
 import { parseExcelFile, validateExcelFile } from '../utils/excelParser.js';
 import { normalizePhoneNumber } from '../utils/phoneUtils.js';
+import { logger } from '../utils/logger.js';
 
 /**
  * Handle Excel file upload and parsing
@@ -14,7 +15,7 @@ export const uploadExcelFile = async (req, res) => {
       });
     }
 
-    console.log(`📁 Processing uploaded file: ${req.file.originalname}`);
+    logger.info(`📁 Processing uploaded file: ${req.file.originalname}`);
 
     // Validate file format
     const validation = validateExcelFile(req.file);
@@ -99,16 +100,16 @@ export const uploadExcelFile = async (req, res) => {
       response.warnings = allWarnings;
     }
 
-    console.log(`✅ Successfully processed ${processedMessageRows.length} rows with ${totalMessages} total messages from ${req.file.originalname}`);
+    logger.info(`✅ Successfully processed ${processedMessageRows.length} rows with ${totalMessages} total messages from ${req.file.originalname}`);
     
     if (allWarnings.length > 0) {
-      console.warn(`⚠️ Processing warnings: ${allWarnings.length} issues found`);
+      logger.warn(`⚠️ Processing warnings: ${allWarnings.length} issues found`, { warnings: allWarnings });
     }
 
     res.json(response);
 
   } catch (error) {
-    console.error('❌ Error processing uploaded file:', error);
+    logger.error('❌ Error processing uploaded file:', { error, file: req.file.originalname });
     
     res.status(500).json({
       success: false,

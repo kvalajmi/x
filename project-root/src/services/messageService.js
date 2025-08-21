@@ -1,5 +1,6 @@
 import PQueue from 'p-queue';
 import { saveLog, createLogEntry } from '../utils/logUtils.js';
+import { logger } from '../utils/logger.js';
 
 class MessageService {
   constructor(whatsappService, io) {
@@ -40,7 +41,7 @@ class MessageService {
     // Calculate total messages to send
     const totalMessages = messageRows.reduce((total, row) => total + row.validPhones.length, 0);
     
-    console.log(`🚀 Starting bulk messaging for ${messageRows.length} rows with ${totalMessages} total messages`);
+    logger.info(`🚀 Starting bulk messaging for ${messageRows.length} rows with ${totalMessages} total messages`);
     
     this.messageRows = messageRows;
     this.messageTemplate = messageTemplate; // Not used in new structure
@@ -65,7 +66,7 @@ class MessageService {
     // Process each message row
     for (const messageRow of messageRows) {
       if (!this.isRunning) {
-        console.log('⏹️ Messaging stopped by user');
+        logger.info('⏹️ Messaging stopped by user');
         break;
       }
 
@@ -85,12 +86,12 @@ class MessageService {
       await this.queue.onIdle();
       
       if (this.isRunning && !this.isPaused) {
-        console.log('✅ Bulk messaging completed');
+        logger.info('✅ Bulk messaging completed');
         this.io.emit('status_update', { status: 'completed' });
         this.isRunning = false;
       }
     } catch (error) {
-      console.error('❌ Error in bulk messaging:', error);
+      logger.error('❌ Error in bulk messaging:', { error });
       this.io.emit('status_update', { status: 'error', error: error.message });
       this.isRunning = false;
     }
@@ -111,7 +112,7 @@ class MessageService {
       // Check if phone number is registered (optional validation)
       const phoneCheck = await this.whatsappService.checkPhoneNumber(phone);
       if (!phoneCheck.valid) {
-        console.warn(`⚠️ Phone ${phone} is not registered: ${phoneCheck.reason}`);
+        logger.warn(`⚠️ Phone ${phone} is not registered: ${phoneCheck.reason}`);
         await this.handleFailedMessage(messageRow, phoneData, `Phone not registered: ${phoneCheck.reason}`);
         return;
       }
@@ -125,7 +126,7 @@ class MessageService {
         await this.handleFailedMessage(messageRow, phoneData, 'Failed to send message');
       }
     } catch (error) {
-      console.error(`❌ Failed to send to ${phoneData.phone}:`, error);
+      logger.error(`❌ Failed to send to ${phoneData.phone}:`, { error });
       await this.handleFailedMessage(messageRow, phoneData, error.message);
     }
   }
@@ -175,7 +176,7 @@ class MessageService {
     if (currentAttempts < 2) { // Max 2 retry attempts
       this.retryAttempts.set(messageKey, currentAttempts + 1);
       
-      console.log(`🔄 Retrying message to ${messageRow.name} (Row ${messageRow.rowNumber}, Column ${phoneData.column}) - Attempt ${currentAttempts + 1}`);
+      logger.info(`🔄 Retrying message to ${messageRow.name} (Row ${messageRow.rowNumber}, Column ${phoneData.column}) - Attempt ${currentAttempts + 1}`);
       
       // Add retry to queue with delay
       setTimeout(() => {
@@ -218,7 +219,7 @@ class MessageService {
     // Save to file
     await saveLog(logEntry);
     
-    console.log(`❌ Message failed for ${messageRow.name} (Row ${messageRow.rowNumber}, Column ${phoneData.column}) at ${phoneData.phone}: ${error}`);
+    logger.error(`❌ Message failed for ${messageRow.name} (Row ${messageRow.rowNumber}, Column ${phoneData.column}) at ${phoneData.phone}: ${error}`);
   }
 
   // Template replacement is no longer used - messages come directly from Excel column G
@@ -231,7 +232,7 @@ class MessageService {
       throw new Error('No messaging process is running');
     }
     
-    console.log('⏸️ Pausing messaging...');
+    logger.info('⏸️ Pausing messaging...');
     this.isPaused = true;
     this.queue.pause();
     this.io.emit('status_update', { status: 'paused' });
@@ -245,7 +246,7 @@ class MessageService {
       throw new Error('No paused messaging process to resume');
     }
     
-    console.log('▶️ Resuming messaging...');
+    logger.info('▶️ Resuming messaging...');
     this.isPaused = false;
     this.queue.start();
     this.io.emit('status_update', { status: 'sending' });
@@ -259,7 +260,7 @@ class MessageService {
       throw new Error('No messaging process is running');
     }
     
-    console.log('🛑 Cancelling messaging...');
+    logger.info('🛑 Cancelling messaging...');
     this.isRunning = false;
     this.isPaused = false;
     this.queue.clear();

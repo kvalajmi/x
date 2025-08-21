@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card';
 interface ControlPanelProps {
   whatsappReady: boolean;
   hasContacts: boolean;
+  hasMessage: boolean;
   sendingStatus: 'idle' | 'sending' | 'paused' | 'cancelled';
   onStart: () => void;
   onPause: () => void;
@@ -15,18 +16,19 @@ interface ControlPanelProps {
 const ControlPanel = ({
   whatsappReady,
   hasContacts,
+  hasMessage,
   sendingStatus,
   onStart,
   onPause,
   onResume,
   onCancel
 }: ControlPanelProps) => {
-  const canStart = whatsappReady && hasContacts && sendingStatus === 'idle';
+  const canStart = whatsappReady && hasContacts && hasMessage && sendingStatus === 'idle';
   const canPause = sendingStatus === 'sending';
   const canResume = sendingStatus === 'paused';
   const canCancel = sendingStatus === 'sending' || sendingStatus === 'paused';
 
-  console.log('🎛️ ControlPanel render:', { whatsappReady, hasContacts, sendingStatus, canStart });
+  console.log('🎛️ ControlPanel render:', { whatsappReady, hasContacts, hasMessage, sendingStatus, canStart });
 
   return (
     <Card className="card-whatsapp">
